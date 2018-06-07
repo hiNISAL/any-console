@@ -1,0 +1,38 @@
+{
+  "name": "any-console",
+  "version": "0.0.1",
+  "description": "适用于手机的虚拟控制台",
+  "main": "src/index.js",
+  "directories": {
+    "doc": "doc"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build:minify": "cross-env NODE_ENV=production MINIFY=true rollup -c",
+    "build:std": "cross-env NODE_ENV=production MINIFY=false rollup -c",
+    "dev": "cross-env NODE_ENV=development MINIFY=false rollup -c -w",
+    "build": "npm run build:minify && npm run build:std",
+    "start": "npm run dev"
+  },
+  "keywords": [
+    "console"
+  ],
+  "author": "NISAL",
+  "license": "MIT",
+  "devDependencies": {
+    "autoprefixer": "^8.6.1",
+    "babel-core": "^6.26.3",
+    "babel-plugin-external-helpers": "^6.22.0",
+    "babel-preset-latest": "^6.24.1",
+    "cross-env": "^5.1.6",
+    "postcss": "^6.0.22",
+    "rollup": "^0.60.1",
+    "rollup-plugin-babel": "^3.0.4",
+    "rollup-plugin-livereload": "^0.6.0",
+    "rollup-plugin-postcss": "^1.6.2",
+    "rollup-plugin-sass": "^0.8.0",
+    "rollup-plugin-serve": "^0.4.2",
+    "rollup-plugin-uglify": "^4.0.0"
+  },
+  "dependencies": {}
+}
