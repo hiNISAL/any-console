@@ -1,3 +1,8 @@
+import WrapperDOM from '../templates/warpper';
+import ConsoleItem from '../templates/console/item';
+import { $, $$, append } from '../utils/utils';
+
+const body = document.body;
 
 export default class AnyConsole {
   constructor() {
@@ -5,7 +10,12 @@ export default class AnyConsole {
   }
 
   _init() {
-    this._consolePanel = null;
+    this.warpper = null;  // 整个dom
+
+    this.consolePanel = null; // console面板
+    this.consoleItemsContainer = null; // console面板输出容器
+
+    this._createElemnt();
 
     this._initLog();
     this._initError();
@@ -13,9 +23,11 @@ export default class AnyConsole {
   }
 
   _createElemnt() {
-    // console panel
-    this._consolePanel = document.createElement('div');
+    this.warpper = WrapperDOM();
+    
+    this.consolePanel = $('.__any_console-console-panel-log-items', this.warpper);
 
+    append(body, this.warpper);
   }
 
   _appendLog() {
@@ -24,11 +36,10 @@ export default class AnyConsole {
 
   _initLog() {
     const log = console.log;
-    console.log = function(...logs) {
-      document.body.appendChild(document.createElement('hr'));
+    console.log = (...logs) => {
 
       for (let i of logs.values()) {
-
+        append(this.consolePanel, ConsoleItem(i, 'log'));
       }
 
       log.apply(console, logs);
@@ -38,9 +49,10 @@ export default class AnyConsole {
   _initError() {
     const err = console.error;
 
-    console.error = function(...errs) {
-      console.log(errs);
-
+    console.error = (...errs) => {
+      for (let i of errs.values()) {
+        append(this.consolePanel, ConsoleItem(i, 'error'));
+      }
       err.apply(console, errs);
     }
 
@@ -73,3 +85,4 @@ export default class AnyConsole {
     }
   }
 }
+

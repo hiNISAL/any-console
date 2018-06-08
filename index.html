@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,7 +12,7 @@
       padding: 0;
     }
 
-    button {
+    .demo-btn {
       display: block;
       width: 90%;
       margin: 0 auto;
@@ -25,13 +26,14 @@
     }
   </style>
 </head>
-<body>
-  <button id="clog">log</button>
-  <button id="cerr">err</button>
-  <button id="cinfo">info</button>
-  <button id="cwarn">warn</button>
 
-  <div id="__any_console-wrapper">
+<body>
+  <button class="demo-btn" id="clog">log</button>
+  <button class="demo-btn" id="cerr">err</button>
+  <button class="demo-btn" id="cinfo">info</button>
+  <button class="demo-btn" id="cwarn">warn</button>
+
+  <!-- <div id="__any_console-wrapper">
     <div class="__any_console-tab">
       <header class="__any_console-header">
         <span class="__any_console-header-title">
@@ -40,45 +42,76 @@
         <span class="__any_console-close-btn">
           ×
         </span>
-        
+
       </header>
       <ul class="__any_console-tab-wrapper">
         <li class="__any_console_tab_item active">Console</l>
-        <li class="__any_console_tab_item">Network</li>
-        <li class="__any_console_tab_item">Cookie</li>
-        <li class="__any_console_tab_item">LocalStorage</li>
-        <li class="__any_console_tab_item">SessionStorage</li>
+          <li class="__any_console_tab_item">Network</li>
+          <li class="__any_console_tab_item">Cookie</li>
+          <li class="__any_console_tab_item">LocalStorage</li>
+          <li class="__any_console_tab_item">SessionStorage</li>
       </ul>
     </div>
 
-    <div class="__any_console-penels">
+    <div class="__any_console-panels">
       <div class="__any_console-console-panel">
-        
+        <div class="__any_console-order">
+          <input type="text">
+          <button>确定</button>
+        </div>
+
+        <div class="__any_console-console-panel-log-items">
+          <div class="__any_console-console-panel-log-item">
+            <div class="__any_console-console-panel-log-item-msg">没有任何问题没有任何问题</div>
+            <div class="__any_console-console-panel-log-item-time">17:22</div>
+          </div>
+
+          <div class="__any_console-console-panel-log-item __any_console-error">
+            <div class="__any_console-console-panel-log-item-msg">我炸错了我炸错了</div>
+            <div class="__any_console-console-panel-log-item-time">17:22</div>
+          </div>
+
+          <div class="__any_console-console-panel-log-item __any_console-info">
+            <div class="__any_console-console-panel-log-item-msg">我是提示</div>
+            <div class="__any_console-console-panel-log-item-time">17:22</div>
+          </div>
+
+          <div class="__any_console-console-panel-log-item __any_console-warn">
+            <div class="__any_console-console-panel-log-item-msg">我是警告</div>
+            <div class="__any_console-console-panel-log-item-time">17:22</div>
+          </div>
+        </div>
+
       </div>
+
+
     </div>
-  </div>
+  </div> -->
   <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
   <script src="./release/any-console.js"></script>
   <script>
     new AnyConsole();
 
-    $('#clog').click(function() {
-      console.log({a: 1, b: 2});
+    $('#clog').click(function () {
+      console.log('1', '2');
     });
 
-    $('#cerr').click(function() {
-      console.error({a: 1, b: 2});
+    $('#cerr').click(function () {
+      console.error({
+        a: 1,
+        b: 2
+      });
       // alertter(1);
     });
 
-    $('#cinfo').click(function() {
+    $('#cinfo').click(function () {
       console.info('1');
     });
 
-    $('#cwarn').click(function() {
+    $('#cwarn').click(function () {
       console.warn('1');
     });
-
   </script>
 </body>
+
 </html>

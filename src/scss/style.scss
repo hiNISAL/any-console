@@ -2,6 +2,23 @@ $grey: #d1d1d1;
 $white: #ffffff;
 $blue: #2f78d8;
 $deep-blue: #2367c0;
+$green: #17921d;
+$thin-red: #fff1f1;
+$red: #d33a3a;
+$thin-blue: #e4fbff;
+$yellow: #c5a90b;
+$thin-yellow: #fffde9;
+
+.__any_console-console-icon {
+  display: block;
+  height: 15px;
+  width: 15px;
+  line-height: 13px;
+  margin-top: 2px;
+  margin-right: 5px;
+  text-align: center;
+}
+
 #__any_console-wrapper {
   position: fixed;
   bottom: 0;
@@ -9,39 +26,160 @@ $deep-blue: #2367c0;
   width: 100%;
   font-size: 10px;
   background: $white;
-  .__any_console-header {
-    width: 100%;
-    line-height: 30px;
-    padding: 10px;
-    font-size: 2em;
-    background: $deep-blue;
-    color: $white;
-    .__any_console-close-btn {
-      font-size: 1.5em;
-      line-height: 30px;
-      float: right;
-      cursor: pointer;
-      margin-right: 20px;
+
+  input, button {
+    outline: 0 none;
+  }
+
+  .__any_console-tab {
+
+    .__any_console-header {
+      width: 100%;
+      line-height: 25px;
+      padding: 10px;
+      font-size: 2em;
+      background: $deep-blue;
+      color: $white;
+
+      .__any_console-close-btn {
+        font-size: 1.5em;
+        line-height: 25px;
+        float: right;
+        cursor: pointer;
+        margin-right: 20px;
+      }
+    }
+
+    .__any_console-tab-wrapper {
+      list-style-type: none;
+      white-space: nowrap;
+      overflow-x: scroll;
+      border-bottom: 1px solid $grey;
+
+      &::-webkit-scrollbar {
+        display: none
+      }
+
+      .__any_console_tab_item.active {
+        background: $blue;
+        color: $white;
+      }
+
+      .__any_console_tab_item {
+        display: inline-block;
+        font-size: 1.5em;
+        padding: 5px 10px;
+        cursor: pointer;
+      }
     }
   }
-  .__any_console-tab-wrapper {
-    list-style-type: none;
-    white-space: nowrap;
-    overflow-x: scroll;
-    border-bottom: 1px solid $grey;
 
-    &::-webkit-scrollbar {
-      display: none
+  .__any_console-panels {
+    position: relative;
+    height: 100%;
+    width: 100%;
+
+    .__any_console-order {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 40px;
+      display: flex;
+      z-index: 10;
+
+      input {
+        flex: 1;
+        height: 40px;
+        border: 0 none;
+        border-top: 1px solid $blue;
+        color: #000;
+        font-size: 1.6em;
+        padding: 0 5px;
+        box-sizing: border-box;
+      }
+
+      button {
+        width: 60px;
+        height: 40px;
+        background: $blue;
+        color: $white;
+        border-top: 1px solid $blue;
+      }
     }
-    .__any_console_tab_item.active {
-      background: $blue;
-      color: $white;
+    
+    .__any_console-console-panel {
+      position: absolute;
+      width: 100%;
+      height: calc(100% - 31px - 45px);
+
+      .__any_console-console-panel-log-items {
+        position: absolute;
+        height: 100%;
+        width: 100%;
+        overflow-y: scroll;
+
+        .__any_console-console-panel-log-item {
+          display: flex;
+          word-break: break-all;
+          font-size: 1.3em;
+          border-bottom: 1px solid $grey;
+          padding: 10px 5px;
+          background: $white;
+
+          &:last-child {
+            margin-bottom: 40px;
+          }
+          
+          .__any_console-console-panel-log-item-msg {
+            flex: 1;
+          }
+  
+          .__any_console-console-panel-log-item-time {
+            width: 60px;
+            text-align: right;
+          }
+        }
+  
+        .__any_console-error {
+          background: $thin-red;
+          color: $red;
+          border-bottom: 1px solid $red;
+  
+          &::before {
+            @extend .__any_console-console-icon;
+            content: '×';
+            color: $red;
+          }
+        }
+  
+        .__any_console-info {
+          background: $thin-blue;
+          color: $blue;
+          border-bottom: 1px solid $blue;
+  
+          &::before {
+            @extend .__any_console-console-icon;
+            content: '!';
+            color: $blue;
+            line-height: 15px;
+          }
+        }
+  
+        .__any_console-warn {
+          background: $thin-yellow;
+          color: $yellow;
+          border-bottom: 1px solid $yellow;
+  
+          &::before {
+            @extend .__any_console-console-icon;
+            content: '?';
+            color: $yellow;
+            line-height: 15px;
+          }
+        }
+      }
     }
-    .__any_console_tab_item {
-      display: inline-block;
-      font-size: 1.5em;
-      padding: 5px 10px;
-      cursor: pointer;
-    }
+
   }
 }
