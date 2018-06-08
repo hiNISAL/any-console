@@ -4,10 +4,81 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Document</title>
+  <title>AnyConsole</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+
+    button {
+      display: block;
+      width: 90%;
+      margin: 0 auto;
+      margin-top: 15px;
+      border: 0 none;
+      background: #0dc444;
+      line-height: 40px;
+      color: white;
+      font-size: 20px;
+      border-radius: 2px;
+    }
+  </style>
 </head>
 <body>
-dfsfdsdfsafsda234fdsasfddddfab
+  <button id="clog">log</button>
+  <button id="cerr">err</button>
+  <button id="cinfo">info</button>
+  <button id="cwarn">warn</button>
+
+  <div id="__any_console-wrapper">
+    <div class="__any_console-tab">
+      <header class="__any_console-header">
+        <span class="__any_console-header-title">
+          Any Console
+        </span>
+        <span class="__any_console-close-btn">
+          ×
+        </span>
+        
+      </header>
+      <ul class="__any_console-tab-wrapper">
+        <li class="__any_console_tab_item active">Console</l>
+        <li class="__any_console_tab_item">Network</li>
+        <li class="__any_console_tab_item">Cookie</li>
+        <li class="__any_console_tab_item">LocalStorage</li>
+        <li class="__any_console_tab_item">SessionStorage</li>
+      </ul>
+    </div>
+
+    <div class="__any_console-penels">
+      <div class="__any_console-console-panel">
+        
+      </div>
+    </div>
+  </div>
+  <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
   <script src="./release/any-console.js"></script>
+  <script>
+    new AnyConsole();
+
+    $('#clog').click(function() {
+      console.log({a: 1, b: 2});
+    });
+
+    $('#cerr').click(function() {
+      console.error({a: 1, b: 2});
+      // alertter(1);
+    });
+
+    $('#cinfo').click(function() {
+      console.info('1');
+    });
+
+    $('#cwarn').click(function() {
+      console.warn('1');
+    });
+
+  </script>
 </body>
 </html>

@@ -1,0 +1,47 @@
+$grey: #d1d1d1;
+$white: #ffffff;
+$blue: #2f78d8;
+$deep-blue: #2367c0;
+#__any_console-wrapper {
+  position: fixed;
+  bottom: 0;
+  height: 70%;
+  width: 100%;
+  font-size: 10px;
+  background: $white;
+  .__any_console-header {
+    width: 100%;
+    line-height: 30px;
+    padding: 10px;
+    font-size: 2em;
+    background: $deep-blue;
+    color: $white;
+    .__any_console-close-btn {
+      font-size: 1.5em;
+      line-height: 30px;
+      float: right;
+      cursor: pointer;
+      margin-right: 20px;
+    }
+  }
+  .__any_console-tab-wrapper {
+    list-style-type: none;
+    white-space: nowrap;
+    overflow-x: scroll;
+    border-bottom: 1px solid $grey;
+
+    &::-webkit-scrollbar {
+      display: none
+    }
+    .__any_console_tab_item.active {
+      background: $blue;
+      color: $white;
+    }
+    .__any_console_tab_item {
+      display: inline-block;
+      font-size: 1.5em;
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+  }
+}
