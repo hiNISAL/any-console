@@ -26,6 +26,13 @@ export default function() {
 
       <div class="__any_console-panels">
         <div class="__any_console-console-panel">
+          <ul class="__any_console-console-panel-filter">
+            <li class="active">All</li>
+            <li>Log</li>
+            <li>Info</li>
+            <li>Warn</li>
+            <li>Error</li>
+          </ul>
           <div class="__any_console-order">
             <input type="text">
             <button>确定</button>

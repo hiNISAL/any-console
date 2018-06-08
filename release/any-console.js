@@ -15,8 +15,91 @@
     }
   };
 
+  const cutString = (str, len = 10) => {
+    str = str.toString();
+    let res = str.split('').splice(0, len).join('');
+    if (res.length === len && str.length !== len) res += '...';
+    return res;
+  };
+
   const ce = (ele) => {
-    return document.createElement('ele');
+    return document.createElement(ele);
+  };
+
+  const formatObject = (obj) => {
+    for (let [k, v] of Object.entries(obj)) {
+      if (typeof v === 'object') {
+        formatObject(obj[k]);
+      }
+
+      if (typeof v === 'function') {
+        obj[k] = cutString(obj[k], 30);
+      }
+
+      if (v === null) {
+        obj[k] = 'null';
+      }
+
+      if (v === undefined) {
+        obj[k] = 'undefined';
+      }
+    }
+  };
+
+  const objectHTMLify = (obj, newObj) => {
+    for (let [k, v] of Object.entries(obj)) {
+      if (typeof v === 'object') {
+        let key = `<span class="__any_console-console-obj-key">${ k }</span>`;
+        newObj[key] = {};
+
+        objectHTMLify(obj[k], newObj[key]);
+        return;
+      }
+
+      newObj[`<span class="__any_console-console-obj-key">${ k }</span>`] = `<span class="__any_console-console-obj-value">${ v }</span>`;
+    }
+  };
+
+  const object2tree = (obj) => {
+    formatObject(obj);
+
+    let newObj = {};
+    objectHTMLify(obj, newObj);
+
+    let stringify = JSON.stringify(newObj, null, 2);
+
+    stringify = stringify.replace(/\\"/g, '');
+
+    stringify = `
+    <div class="__any_console-console-obj-prev">
+      <span class="__any_console-console-obj-prev-icon">▶</span> Object ${ cutString(JSON.stringify(obj), 15) }
+    </div>
+    <pre style="display: none;">${stringify}</pre>
+  `;
+    return stringify;
+  };
+
+  const toggleShow = (target, showType = 'block') => {
+    if (target.style.display === 'none') {
+      target.style.display = showType;
+    } else {
+      target.style.display = 'none';
+    }
+  };
+
+  const setScrollToBottom = target => {
+    target.scrollTop = target.scrollHeight;
+  };
+
+  const parseLog = logs => {
+    let parsedLogs = [];
+    for (let i of logs.values()) {
+      if (typeof i === 'object') {
+        i = object2tree(i);
+      }
+      parsedLogs.push(i);
+    }
+    return parsedLogs;
   };
 
   function WrapperDOM() {
@@ -45,6 +128,13 @@
 
       <div class="__any_console-panels">
         <div class="__any_console-console-panel">
+          <ul class="__any_console-console-panel-filter">
+            <li class="active">All</li>
+            <li>Log</li>
+            <li>Info</li>
+            <li>Warn</li>
+            <li>Error</li>
+          </ul>
           <div class="__any_console-order">
             <input type="text">
             <button>确定</button>
@@ -99,11 +189,16 @@
       this.consolePanel = null; // console面板
       this.consoleItemsContainer = null; // console面板输出容器
 
+      this.logsClassify = {log: [], error: [], info: [], warn: []};
+
       this._createElemnt();
 
       this._initLog();
       this._initError();
       this._initInfo();
+      this._initWarn();
+
+      this._bind();
     }
 
     _createElemnt() {
@@ -121,10 +216,12 @@
     _initLog() {
       const log = console.log;
       console.log = (...logs) => {
+        let parsedLogs = parseLog(logs);
 
-        for (let i of logs.values()) {
-          append(this.consolePanel, ConsoleItem(i, 'log'));
-        }
+        let item = ConsoleItem(parsedLogs.join(' '), 'log');
+        append(this.consolePanel, item);
+        setScrollToBottom(this.consolePanel);
+        this.logsClassify['log'].push(item);
 
         log.apply(console, logs);
       };
@@ -134,17 +231,24 @@
       const err = console.error;
 
       console.error = (...errs) => {
-        for (let i of errs.values()) {
-          append(this.consolePanel, ConsoleItem(i, 'error'));
-        }
+        let parsedLogs = parseLog(errs);
+
+        let item = ConsoleItem(parsedLogs.join(' '), 'error');
+        append(this.consolePanel, item);
+        setScrollToBottom(this.consolePanel);
+        this.logsClassify['error'].push(item);
+
         err.apply(console, errs);
       };
 
       /**
        * 拦截全局错误
        */
-      window.addEventListener('error', (err, url, line) => {
+      window.addEventListener('error', ({ message, type, timeStamp, lineno, isTrusted }) => {
 
+        console.error({
+          message, type, isTrusted, lineno, timeStamp
+        });
       });
 
     }
@@ -152,8 +256,13 @@
     _initInfo() {
       const info = console.info;
 
-      console.info = function(...infos) {
-        document.body.appendChild(document.createElement('hr'));
+      console.info = (...infos) => {
+        let parsedLogs = parseLog(infos);
+
+        let item = ConsoleItem(parsedLogs.join(' '), 'info');
+        append(this.consolePanel, item);
+        setScrollToBottom(this.consolePanel);
+        this.logsClassify['info'].push(item);
 
         info.apply(console, infos);
       };
@@ -162,11 +271,30 @@
     _initWarn() {
       const warn = console.warn;
 
-      console.warn = function(...warns) {
-        document.body.appendChild(document.createElement('hr'));
-        
+      console.warn = (...warns) => {
+        let parsedLogs = parseLog(warns);
+
+        let item = ConsoleItem(parsedLogs.join(' '), 'warn');
+        append(this.consolePanel, item);
+        setScrollToBottom(this.consolePanel);
+        this.logsClassify['warn'].push(item);
+
         warn.apply(console, warns);
       };
+    }
+
+    _bind() {
+      this.consolePanel.addEventListener('click', ({ target }) => {
+        if (target.className === '__any_console-console-obj-prev-icon') {
+          target = target.parentNode;
+        }
+
+        if (target.className === '__any_console-console-obj-prev') {
+          let span = $('span', target);
+          span.innerText = span.innerText === '▶' ? '▼' : '▶';
+          toggleShow($('pre', target.parentNode));
+        }
+      });
     }
   }
 
@@ -197,7 +325,7 @@
     }
   }
 
-  var css = "@charset \"UTF-8\";\n.__any_console-console-icon, #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-error::before, #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-info::before, #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-warn::before {\n  display: block;\n  height: 15px;\n  width: 15px;\n  line-height: 13px;\n  margin-top: 2px;\n  margin-right: 5px;\n  text-align: center; }\n\n#__any_console-wrapper {\n  position: fixed;\n  bottom: 0;\n  height: 70%;\n  width: 100%;\n  font-size: 10px;\n  background: #ffffff; }\n  #__any_console-wrapper input, #__any_console-wrapper button {\n    outline: 0 none; }\n  #__any_console-wrapper .__any_console-tab .__any_console-header {\n    width: 100%;\n    line-height: 25px;\n    padding: 10px;\n    font-size: 2em;\n    background: #2367c0;\n    color: #ffffff; }\n    #__any_console-wrapper .__any_console-tab .__any_console-header .__any_console-close-btn {\n      font-size: 1.5em;\n      line-height: 25px;\n      float: right;\n      cursor: pointer;\n      margin-right: 20px; }\n  #__any_console-wrapper .__any_console-tab .__any_console-tab-wrapper {\n    list-style-type: none;\n    white-space: nowrap;\n    overflow-x: scroll;\n    border-bottom: 1px solid #d1d1d1; }\n    #__any_console-wrapper .__any_console-tab .__any_console-tab-wrapper::-webkit-scrollbar {\n      display: none; }\n    #__any_console-wrapper .__any_console-tab .__any_console-tab-wrapper .__any_console_tab_item.active {\n      background: #2f78d8;\n      color: #ffffff; }\n    #__any_console-wrapper .__any_console-tab .__any_console-tab-wrapper .__any_console_tab_item {\n      display: inline-block;\n      font-size: 1.5em;\n      padding: 5px 10px;\n      cursor: pointer; }\n  #__any_console-wrapper .__any_console-panels {\n    position: relative;\n    height: 100%;\n    width: 100%; }\n    #__any_console-wrapper .__any_console-panels .__any_console-order {\n      position: absolute;\n      bottom: 0;\n      left: 0;\n      width: 100%;\n      height: 40px;\n      display: flex;\n      z-index: 10; }\n      #__any_console-wrapper .__any_console-panels .__any_console-order input {\n        flex: 1;\n        height: 40px;\n        border: 0 none;\n        border-top: 1px solid #2f78d8;\n        color: #000;\n        font-size: 1.6em;\n        padding: 0 5px;\n        box-sizing: border-box; }\n      #__any_console-wrapper .__any_console-panels .__any_console-order button {\n        width: 60px;\n        height: 40px;\n        background: #2f78d8;\n        color: #ffffff;\n        border-top: 1px solid #2f78d8; }\n    #__any_console-wrapper .__any_console-panels .__any_console-console-panel {\n      position: absolute;\n      width: 100%;\n      height: calc(100% - 31px - 45px); }\n      #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items {\n        position: absolute;\n        height: 100%;\n        width: 100%;\n        overflow-y: scroll; }\n        #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-console-panel-log-item {\n          display: flex;\n          word-break: break-all;\n          font-size: 1.3em;\n          border-bottom: 1px solid #d1d1d1;\n          padding: 10px 5px;\n          background: #ffffff; }\n          #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-console-panel-log-item:last-child {\n            margin-bottom: 40px; }\n          #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-console-panel-log-item .__any_console-console-panel-log-item-msg {\n            flex: 1; }\n          #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-console-panel-log-item .__any_console-console-panel-log-item-time {\n            width: 60px;\n            text-align: right; }\n        #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-error {\n          background: #fff1f1;\n          color: #d33a3a;\n          border-bottom: 1px solid #d33a3a; }\n          #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-error::before {\n            content: '×';\n            color: #d33a3a; }\n        #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-info {\n          background: #e4fbff;\n          color: #2f78d8;\n          border-bottom: 1px solid #2f78d8; }\n          #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-info::before {\n            content: '!';\n            color: #2f78d8;\n            line-height: 15px; }\n        #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-warn {\n          background: #fffde9;\n          color: #c5a90b;\n          border-bottom: 1px solid #c5a90b; }\n          #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-warn::before {\n            content: '?';\n            color: #c5a90b;\n            line-height: 15px; }\n";
+  var css = "@charset \"UTF-8\";\n.__any_console-console-icon, #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-error::before, #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-info::before, #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-warn::before {\n  display: block;\n  height: 15px;\n  width: 15px;\n  line-height: 13px;\n  margin-top: 2px;\n  margin-right: 5px;\n  text-align: center; }\n\n#__any_console-wrapper {\n  position: fixed;\n  bottom: 0;\n  height: 50%;\n  width: 100%;\n  font-size: 10px;\n  background: #ffffff; }\n  #__any_console-wrapper input, #__any_console-wrapper button {\n    outline: 0 none; }\n  #__any_console-wrapper .__any_console-tab .__any_console-header {\n    width: 100%;\n    line-height: 25px;\n    padding: 10px;\n    font-size: 2em;\n    background: #2367c0;\n    color: #ffffff; }\n    #__any_console-wrapper .__any_console-tab .__any_console-header .__any_console-close-btn {\n      font-size: 1.5em;\n      line-height: 25px;\n      float: right;\n      cursor: pointer;\n      margin-right: 20px; }\n  #__any_console-wrapper .__any_console-tab .__any_console-tab-wrapper {\n    list-style-type: none;\n    white-space: nowrap;\n    overflow-x: scroll;\n    border-bottom: 1px solid #d1d1d1; }\n    #__any_console-wrapper .__any_console-tab .__any_console-tab-wrapper::-webkit-scrollbar {\n      display: none; }\n    #__any_console-wrapper .__any_console-tab .__any_console-tab-wrapper .__any_console_tab_item.active {\n      background: #2f78d8;\n      color: #ffffff; }\n    #__any_console-wrapper .__any_console-tab .__any_console-tab-wrapper .__any_console_tab_item {\n      display: inline-block;\n      font-size: 1.5em;\n      padding: 5px 10px;\n      cursor: pointer; }\n  #__any_console-wrapper .__any_console-panels {\n    position: relative;\n    height: 100%;\n    width: 100%; }\n    #__any_console-wrapper .__any_console-panels .__any_console-order {\n      position: absolute;\n      bottom: -25px;\n      left: 0;\n      width: 100%;\n      height: 40px;\n      display: flex;\n      z-index: 10; }\n      #__any_console-wrapper .__any_console-panels .__any_console-order input {\n        flex: 1;\n        height: 40px;\n        border: 0 none;\n        border-top: 1px solid #2f78d8;\n        color: #000;\n        font-size: 1.6em;\n        padding: 0 5px;\n        box-sizing: border-box; }\n      #__any_console-wrapper .__any_console-panels .__any_console-order button {\n        width: 60px;\n        height: 40px;\n        background: #2f78d8;\n        color: #ffffff;\n        border-top: 1px solid #2f78d8; }\n    #__any_console-wrapper .__any_console-panels .__any_console-console-panel {\n      position: absolute;\n      width: 100%;\n      height: calc(100% - 31px - 45px - 25px); }\n      #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-filter {\n        height: 25px;\n        border-bottom: 1px solid #d1d1d1;\n        white-space: nowrap; }\n        #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-filter .active {\n          background: #f0f0f0; }\n        #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-filter li {\n          display: inline-block;\n          line-height: 25px;\n          padding: 0 10px;\n          cursor: pointer; }\n      #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items {\n        position: absolute;\n        height: 100%;\n        width: 100%;\n        overflow-y: scroll; }\n        #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items::-webkit-scrollbar {\n          display: none; }\n        #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-console-panel-log-item {\n          display: flex;\n          word-break: break-all;\n          font-size: 1.3em;\n          border-bottom: 1px solid #d1d1d1;\n          padding: 10px 5px;\n          background: #ffffff; }\n          #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-console-panel-log-item .__any_console-console-obj-prev {\n            font-weight: 700;\n            cursor: pointer;\n            user-select: none; }\n          #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-console-panel-log-item .__any_console-console-obj-key {\n            color: #92278f;\n            font-weight: 900; }\n          #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-console-panel-log-item .__any_console-console-obj-value {\n            color: #3ab54a;\n            font-weight: 900; }\n          #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-console-panel-log-item:last-child {\n            margin-bottom: 40px; }\n          #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-console-panel-log-item .__any_console-console-panel-log-item-msg {\n            flex: 1; }\n          #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-console-panel-log-item .__any_console-console-panel-log-item-time {\n            width: 60px;\n            text-align: right; }\n        #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-error {\n          background: #fff1f1;\n          color: #d33a3a;\n          border-bottom: 1px solid #d33a3a; }\n          #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-error::before {\n            content: '×';\n            color: #d33a3a; }\n        #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-info {\n          background: #e4fbff;\n          color: #2f78d8;\n          border-bottom: 1px solid #2f78d8; }\n          #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-info::before {\n            content: '!';\n            color: #2f78d8;\n            line-height: 15px; }\n        #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-warn {\n          background: #fffde9;\n          color: #c5a90b;\n          border-bottom: 1px solid #c5a90b; }\n          #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-warn::before {\n            content: '?';\n            color: #c5a90b;\n            line-height: 15px; }\n";
   styleInject(css);
 
   return AnyConsole;

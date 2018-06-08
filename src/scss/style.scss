@@ -22,7 +22,7 @@ $thin-yellow: #fffde9;
 #__any_console-wrapper {
   position: fixed;
   bottom: 0;
-  height: 70%;
+  height: 50%;
   width: 100%;
   font-size: 10px;
   background: $white;
@@ -81,7 +81,7 @@ $thin-yellow: #fffde9;
 
     .__any_console-order {
       position: absolute;
-      bottom: 0;
+      bottom: -25px;
       left: 0;
       width: 100%;
       height: 40px;
@@ -107,17 +107,40 @@ $thin-yellow: #fffde9;
         border-top: 1px solid $blue;
       }
     }
+
     
     .__any_console-console-panel {
       position: absolute;
       width: 100%;
-      height: calc(100% - 31px - 45px);
+      height: calc(100% - 31px - 45px - 25px);
+
+      
+      .__any_console-console-panel-filter {
+        height: 25px;
+        border-bottom: 1px solid $grey;
+        white-space: nowrap;
+
+        .active {
+          background: #f0f0f0;
+        }
+
+        li {
+          display: inline-block;
+          line-height: 25px;
+          padding: 0 10px;
+          cursor: pointer;
+        }
+      } 
 
       .__any_console-console-panel-log-items {
         position: absolute;
         height: 100%;
         width: 100%;
         overflow-y: scroll;
+        
+        &::-webkit-scrollbar {
+          display: none
+        }
 
         .__any_console-console-panel-log-item {
           display: flex;
@@ -126,6 +149,22 @@ $thin-yellow: #fffde9;
           border-bottom: 1px solid $grey;
           padding: 10px 5px;
           background: $white;
+
+          .__any_console-console-obj-prev {
+            font-weight: 700;
+            cursor: pointer;
+            user-select: none;
+          }
+
+          .__any_console-console-obj-key {
+            color: #92278f;
+            font-weight: 900;
+          }
+
+          .__any_console-console-obj-value {
+            color: #3ab54a;
+            font-weight: 900;
+          }
 
           &:last-child {
             margin-bottom: 40px;
