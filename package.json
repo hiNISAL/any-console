@@ -1,6 +1,6 @@
 {
   "name": "any-console",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "适用于手机的虚拟控制台",
   "main": "release/any-console.js",
   "directories": {

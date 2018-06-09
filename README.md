@@ -4,6 +4,9 @@
 
 Console for mobile devices.
 
+## 安装 Install
+`npm i any-console -S`
+
 ## 使用 Usage
 
 浏览器中使用 Browser
@@ -28,3 +31,7 @@ import ac from 'any-console';
 
 new ac();
 ```
+
+## github
+
+https://github.com/hiNISAL/any-console.git
