@@ -1,8 +1,11 @@
 import WrapperDOM from '../templates/warpper';
 import ConsoleItem from '../templates/console/item';
+import ToggleBtn from '../templates/toggle-btn';
 import { $, $$, append, object2tree, toggleShow, setScrollToBottom, parseLog } from '../utils/utils';
 
 const body = document.body;
+
+let canToggle = true;
 
 export default class AnyConsole {
   constructor() {
@@ -15,9 +18,12 @@ export default class AnyConsole {
     this.consolePanel = null; // console面板
     this.consoleItemsContainer = null; // console面板输出容器
 
-    this.logsClassify = {log: [], error: [], info: [], warn: []};
+    this.logsClassify = {log: [], error: [], info: [], warn: [], all: []};
 
     this._createElemnt();
+
+    this.show = false; // 标记显示状态
+    this.curShowConsoleType = 'all';
 
     this._initLog();
     this._initError();
@@ -25,6 +31,7 @@ export default class AnyConsole {
     this._initWarn();
 
     this._bind();
+    this._show();
   }
 
   _createElemnt() {
@@ -32,7 +39,11 @@ export default class AnyConsole {
     
     this.consolePanel = $('.__any_console-console-panel-log-items', this.warpper);
 
-    append(body, this.warpper);
+    this.toggleBtn = ToggleBtn();
+
+    this.logsShowTypesBtnParent = $('.__any_console-console-panel-filter', this.warpper);
+    this.logsShowTypesBtn = $$('li', this.logsShowTypesBtnParent);
+
   }
 
   _appendLog() {
@@ -45,9 +56,12 @@ export default class AnyConsole {
       let parsedLogs = parseLog(logs);
 
       let item = ConsoleItem(parsedLogs.join(' '), 'log');
-      append(this.consolePanel, item);
+      if (this.curShowConsoleType === 'all' || this.curShowConsoleType === 'log') {
+        append(this.consolePanel, item);
+      }
       setScrollToBottom(this.consolePanel);
       this.logsClassify['log'].push(item);
+      this.logsClassify['all'].push(item);
 
       log.apply(console, logs);
     }
@@ -60,9 +74,12 @@ export default class AnyConsole {
       let parsedLogs = parseLog(errs);
 
       let item = ConsoleItem(parsedLogs.join(' '), 'error');
-      append(this.consolePanel, item);
+      if (this.curShowConsoleType === 'all' || this.curShowConsoleType === 'error') {
+        append(this.consolePanel, item);
+      }
       setScrollToBottom(this.consolePanel);
       this.logsClassify['error'].push(item);
+      this.logsClassify['all'].push(item);
 
       err.apply(console, errs);
     }
@@ -86,9 +103,12 @@ export default class AnyConsole {
       let parsedLogs = parseLog(infos);
 
       let item = ConsoleItem(parsedLogs.join(' '), 'info');
-      append(this.consolePanel, item);
+      if (this.curShowConsoleType === 'all' || this.curShowConsoleType === 'info') {
+        append(this.consolePanel, item);
+      }
       setScrollToBottom(this.consolePanel);
       this.logsClassify['info'].push(item);
+      this.logsClassify['all'].push(item);
 
       info.apply(console, infos);
     }
@@ -101,9 +121,12 @@ export default class AnyConsole {
       let parsedLogs = parseLog(warns);
 
       let item = ConsoleItem(parsedLogs.join(' '), 'warn');
-      append(this.consolePanel, item);
+      if (this.curShowConsoleType === 'all' || this.curShowConsoleType === 'warn') {
+        append(this.consolePanel, item);
+      }
       setScrollToBottom(this.consolePanel);
       this.logsClassify['warn'].push(item);
+      this.logsClassify['all'].push(item);
 
       warn.apply(console, warns);
     }
@@ -121,6 +144,38 @@ export default class AnyConsole {
         toggleShow($('pre', target.parentNode));
       }
     });
+    
+    this.toggleBtn.addEventListener('click', () => {
+      if (!canToggle) return;
+
+      this.warpper.style.bottom = this.show ? '-100%' : 0;
+      this.show = !this.show;
+      canToggle = false;
+
+      setTimeout(() => {
+        canToggle = true;
+      }, 300);
+    });
+
+    $('.__any_console-close-btn', this.warpper).addEventListener('click', () => {
+      this.toggleBtn.click();
+    });
+
+    this.logsShowTypesBtnParent.addEventListener('click', e => {
+      if (e.target.nodeName !== 'LI') return;
+      this.logsShowTypesBtn.forEach(el => void(el.className = ''));
+      e.target.className = 'active';
+
+      this.consolePanel.innerHTML = '';
+
+      let type = e.target.innerText.toLowerCase();
+      append(this.consolePanel, ...this.logsClassify[type]);
+      this.curShowConsoleType = type;
+    });
+  }
+
+  _show() {
+    append(body, this.warpper, this.toggleBtn);
   }
 }
 
