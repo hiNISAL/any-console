@@ -39,18 +39,16 @@ if (isDev) {
   );
   
 } else {
-  if (minify) {
+  if (minify === 'true') {
     config.output.file = 'release/any-console.min.js';
     config.plugins.push(uglify.uglify());
   } else {
     config.output.file = 'release/any-console.js';
   }
 
-  config.plugins = config.plugins.concat([
-    babel({
-      exclude: 'node_modules/**'
-    })
-  ]);
+  config.plugins.push(
+    babel()
+  )
 }
 
 export default config;
