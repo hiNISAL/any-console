@@ -1,4 +1,5 @@
 import { ce } from '../utils/utils';
+import { close } from '../icons/icons';
 
 export default function() {
   let warpper = ce('div');
@@ -10,8 +11,9 @@ export default function() {
           Any Console
         </span>
         <span class="__any_console-close-btn">
-          ×
+          <img src="${ close }">
         </span>
+        
         
       </header>
       <ul class="__any_console-tab-wrapper">
@@ -35,7 +37,8 @@ export default function() {
 
       <div class="__any_console-order">
         <input type="text">
-        <button>确定</button>
+        <button class="__any_console-send-order">确定</button>
+        <button class="__any_console-clear-console">清空</button>
       </div>
       <div class="__any_console-console-panel-log-items">
       

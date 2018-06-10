@@ -11,17 +11,27 @@ $thin-yellow: #fffde9;
 
 .__any_console-toggle-btn {
   position: fixed;
-  line-height: 50px;
   background: $blue;
   text-align: center;
   color: $white;
   border-radius: 50%;
   font-size: 20px;
   width: 50px;
+  height: 50px;
   top: 20px;
   right: 20px;
   z-index: 1000;
   cursor: pointer;
+
+  &:active {
+    background: $deep-blue;
+  }
+
+  img {
+    margin-top: 8px;
+    width: 30px;
+    height: 30px;
+  }
 }
 
 .__any_console-console-icon {
@@ -64,11 +74,14 @@ $thin-yellow: #fffde9;
       color: $white;
 
       .__any_console-close-btn {
-        font-size: 1.5em;
-        line-height: 25px;
         float: right;
         cursor: pointer;
         margin-right: 20px;
+        
+        img {
+          width: 25px;
+          height: 25px;
+        }
       }
     }
 
@@ -126,7 +139,12 @@ $thin-yellow: #fffde9;
         height: 40px;
         background: $blue;
         color: $white;
+        border: 0 none;
         border-top: 1px solid $blue;
+
+        &:active {
+          background: $deep-blue;
+        }
       }
     }
 
@@ -236,6 +254,22 @@ $thin-yellow: #fffde9;
             @extend .__any_console-console-icon;
             content: '?';
             color: $yellow;
+            line-height: 15px;
+          }
+        }
+
+        .__any_console-order {
+          &::before {
+            @extend .__any_console-console-icon;
+            content: '>';
+            line-height: 15px;
+          }
+        }
+
+        .__any_console-order-res {
+          &::before {
+            @extend .__any_console-console-icon;
+            content: '<';
             line-height: 15px;
           }
         }
