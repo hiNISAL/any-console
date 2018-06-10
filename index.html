@@ -32,12 +32,13 @@
   <button class="demo-btn" id="cerr">err</button>
   <button class="demo-btn" id="cinfo">info</button>
   <button class="demo-btn" id="cwarn">warn</button>
+  <button class="demo-btn" id="ajaxhook">AJAX</button>
 
   <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
   <script src="./release/any-console.js"></script>
   <script>
     let ac = new AnyConsole({
-      defaultPanel: 'LocalStorage'
+      defaultPanel: 'network'
     });
 
     $('#clog').click(function () {
@@ -69,6 +70,10 @@
     $('#cwarn').click(function () {
       console.warn('1');
     });
+
+    $('#ajaxhook').click(function() {
+      $.post('/a');
+    })
   </script>
 </body>
 

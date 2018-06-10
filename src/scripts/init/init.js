@@ -17,10 +17,14 @@ export default function(AC) {
     this._createCommonElement(this.curTab);
     this._createConsoleElement();
 
+    // 初始化console面板相关方法
     this._initLog();
     this._initError();
     this._initInfo();
     this._initWarn();
+
+    // 初始化network面板相关方法
+    this._listenAJAX();
 
     this._bindCommonEvents();
     this._bindConsoleEvents();
@@ -30,6 +34,6 @@ export default function(AC) {
     this.show = false; // 标记显示状态
     this.curShowConsoleType = 'all';
 
-    this.toggleBtn.click();
+    // this.toggleBtn.click();
   }
 }

@@ -7,6 +7,8 @@ import initWarn from './init/console/warn';
 import initInfo from './init/console/info';
 import initOrder from './init/console/order';
 
+import initListenAJAX from './init/network/hook';
+
 import createCommonElements from './createElement/createCommonElements';
 import createConsoleElements from './createElement/console/createElement';
 
@@ -43,6 +45,9 @@ initError(AnyConsole);
 initWarn(AnyConsole);
 initInfo(AnyConsole);
 initOrder(AnyConsole);
+
+// network相关初始化
+initListenAJAX(AnyConsole);
 
 // 绑定事件
 bindCommonEvents(AnyConsole);

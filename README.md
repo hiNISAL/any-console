@@ -33,6 +33,18 @@ import ac from 'any-console';
 new ac();
 ```
 
+## 配置项 Options
+
+- defaultPanel
+  - 默认显示的面板 The default panel
+  - 默认值(default value) : `console`
+  - 有效值(effective values)
+    - `console`
+    - `network`
+    - `cookie`
+    - `LocalStorage`
+    - `SessionStorage`
+
 ## github
 
 https://github.com/hiNISAL/any-console.git
