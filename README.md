@@ -3,7 +3,7 @@
 轻量的用于移动设备真机调试的虚拟控制台。
 无需任何修改，无缝接入项目。
 
-Console for mobile devices. Without any modification, just need include 'any-console'.
+Console for mobile devices. Without any modification, just need include `any-console`.
 
 ## 安装 Install
 `npm i any-console -S`

@@ -35,14 +35,14 @@ export default function() {
           <li>Error</li>
         </ul>
 
-      <div class="__any_console-order">
-        <input type="text">
-        <button class="__any_console-send-order">确定</button>
-        <button class="__any_console-clear-console">清空</button>
-      </div>
-      <div class="__any_console-console-panel-log-items">
-      
-      </div>
+        <div class="__any_console-order">
+          <input type="text">
+          <button class="__any_console-send-order">确定</button>
+          <button class="__any_console-clear-console">清空</button>
+        </div>
+        <div class="__any_console-console-panel-log-items">
+        
+        </div>
       </div>
     </div>
   `;

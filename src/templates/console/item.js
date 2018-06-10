@@ -9,7 +9,9 @@ const TYPES = {
   log: '',
   error: ' __any_console-error',
   info: ' __any_console-info',
-  warn: ' __any_console-warn'
+  warn: ' __any_console-warn',
+  orderdo: ' __any_console-order-do',
+  orderres: ' __any_console-order-res'
 };
 
 export default function(msg = '', type = 'log') {
