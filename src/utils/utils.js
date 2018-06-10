@@ -98,3 +98,7 @@ export const parseLog = logs => {
   }
   return parsedLogs;
 }
+
+export const asyncTask = (task) => {
+  setTimeout(task, 0);
+}

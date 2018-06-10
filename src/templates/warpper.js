@@ -1,7 +1,7 @@
-import { ce } from '../utils/utils';
+import { ce, $$ } from '../utils/utils';
 import { close } from '../icons/icons';
 
-export default function() {
+export default function(curTab) {
   let warpper = ce('div');
   warpper.id = '__any_console-wrapper';
   warpper.innerHTML = `
@@ -17,7 +17,7 @@ export default function() {
         
       </header>
       <ul class="__any_console-tab-wrapper">
-        <li class="__any_console_tab_item active">Console</li>
+        <li class="__any_console_tab_item">Console</li>
         <li class="__any_console_tab_item">Network</li>
         <li class="__any_console_tab_item">Cookie</li>
         <li class="__any_console_tab_item">LocalStorage</li>
@@ -26,7 +26,7 @@ export default function() {
     </div>
 
     <div class="__any_console-panels">
-      <div class="__any_console-console-panel">
+      <div class="__any_console_panel __any_console-console-panel">
         <ul class="__any_console-console-panel-filter">
           <li class="active">All</li>
           <li>Log</li>
@@ -44,8 +44,33 @@ export default function() {
         
         </div>
       </div>
+
+      <div class="__any_console_panel __any_console-network-panel">
+
+      </div>
+
+      <div class="__any_console_panel __any_console-cookie-panel">
+
+      </div>
+
+      <div class="__any_console_panel __any_console-localstorage-panel">
+
+      </div>
+
+      <div class="__any_console-sessionstorage-panel">
+
+      </div>
     </div>
   `;
 
-  return warpper;
+  let panels = $$('.__any_console_panel', warpper);
+
+  let curTabEl = panels.find(panel => panel.className.includes(curTab.toLowerCase()));
+
+  let tabsBtn = $$('.__any_console-tab-wrapper li', warpper);
+
+  let curTabBtnEl = tabsBtn.find(btn => btn.innerText.toLowerCase().includes(curTab.toLowerCase()));
+  curTabBtnEl.className = '__any_console_tab_item active';
+
+  return [warpper, curTabEl, tabsBtn, curTabBtnEl, panels];
 };

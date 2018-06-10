@@ -9,6 +9,17 @@ $thin-blue: #e4fbff;
 $yellow: #c5a90b;
 $thin-yellow: #fffde9;
 
+.__any_console-init-err {
+  background: $blue;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  color: $white;
+  padding: 5px;
+  box-shadow: 0 0 10px $blue;
+}
+
 .__any_console-toggle-btn {
   position: fixed;
   background: $blue;
@@ -148,12 +159,19 @@ $thin-yellow: #fffde9;
       }
     }
 
+    .__any_console_panel {
+      position: absolute;
+      width: 100%;
+      height: calc(100% - 31px - 45px);
+      opacity: 0;
+      display: none;
+      transition: all .3s;
+    }
     
     .__any_console-console-panel {
       position: absolute;
       width: 100%;
       height: calc(100% - 31px - 45px - 25px);
-
       
       .__any_console-console-panel-filter {
         height: 25px;
