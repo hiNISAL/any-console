@@ -3,7 +3,7 @@ import WrapperDOM from '../../templates/warpper';
 import ToggleBtn from '../../templates/toggle-btn';
 
 export default function(AC) {
-  AC.prototype._createCommonElement = function(curTab) {
+  AC.prototype._createCommonElement = function(curTab, toggleBtnStyle) {
     let [wrapper, curPanel, tabsBtn, curTabBtn, panels] = WrapperDOM(curTab);
 
     this.warpper = wrapper;
@@ -14,5 +14,9 @@ export default function(AC) {
     
     this.consolePanel = $('.__any_console-console-panel-log-items', this.warpper);
     this.toggleBtn = ToggleBtn();
+
+    for (let [k, v] of Object.entries(toggleBtnStyle)) {
+      this.toggleBtn.style[k] = v;
+    }
   }
 }

@@ -1,5 +1,5 @@
 export default function(AC) {
-  AC.prototype._init = function({ defaultPanel = 'console' }) {
+  AC.prototype._init = function({ defaultPanel = 'console', toggleBtnStyle = {} }) {
     this.warpper = null;  // 整个dom
 
     this.consolePanel = null; // console面板
@@ -9,12 +9,13 @@ export default function(AC) {
     this.tabsBtn = null; // 面板切换按钮
     this.curTabBtn = null; // 当前选中面板对应的按钮
     this.panels = null; // 所有面板
-  
+    this.toggleBtn = null; // 隐藏显示切换按钮
+
     this.logsClassify = {log: [], error: [], info: [], warn: [], all: []};
 
     this.curTab = defaultPanel;
   
-    this._createCommonElement(this.curTab);
+    this._createCommonElement(this.curTab, toggleBtnStyle);
     this._createConsoleElement();
 
     // 初始化console面板相关方法
@@ -34,6 +35,6 @@ export default function(AC) {
     this.show = false; // 标记显示状态
     this.curShowConsoleType = 'all';
 
-    // this.toggleBtn.click();
+    this.toggleBtn.click();
   }
 }

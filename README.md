@@ -45,6 +45,12 @@ new ac();
     - `LocalStorage`
     - `SessionStorage`
 
+- toggleBtnStyle
+  - 自定义切换按钮的样式 To custom the toggle button style
+  - 默认值(default value) : {}
+  - 有效值(effective values)
+    - Object (CSS STYLE)
+
 ## github
 
 https://github.com/hiNISAL/any-console.git

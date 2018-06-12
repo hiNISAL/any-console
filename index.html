@@ -38,7 +38,10 @@
   <script src="./release/any-console.js"></script>
   <script>
     let ac = new AnyConsole({
-      defaultPanel: 'network'
+      defaultPanel: 'network',
+      toggleBtnStyle: {
+        opacity: '.7'
+      }
     });
 
     $('#clog').click(function () {
