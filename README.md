@@ -37,6 +37,7 @@ new ac();
 
 - defaultPanel
   - 默认显示的面板 The default panel
+  - 类型(type) : `string`
   - 默认值(default value) : `console`
   - 有效值(effective values)
     - `console`
@@ -47,9 +48,10 @@ new ac();
 
 - toggleBtnStyle
   - 自定义切换按钮的样式 To custom the toggle button style
+  - 类型(type) : `Object`
   - 默认值(default value) : {}
   - 有效值(effective values)
-    - Object (CSS STYLE)
+    - Object : (CSS STYLE)
 
 ## github
 
