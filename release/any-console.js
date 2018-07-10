@@ -111,10 +111,11 @@
   };
 
   function initial(AC) {
-    AC.prototype._init = function({ defaultPanel = 'console', toggleBtnStyle = {} }) {
+    AC.prototype._init = function({ defaultPanel = 'console', toggleBtnStyle = {}, show = true }) {
       this.warpper = null;  // 整个dom
 
       this.consolePanel = null; // console面板
+      this.networkPanel = null; // network面板
       this.consoleItemsContainer = null; // console面板输出容器
       this.orderInput = null; // 控制台命令的输入框
       this.curPanel = null; // 当前显示的面板
@@ -141,13 +142,14 @@
 
       this._bindCommonEvents();
       this._bindConsoleEvents();
+      this._bindNetworkEvents();
       
       this._show();
     
       this.show = false; // 标记显示状态
       this.curShowConsoleType = 'all';
 
-      this.toggleBtn.click();
+      // this.toggleBtn.click();
     };
   }
 
@@ -283,8 +285,227 @@
     };
   }
 
+  class AnyXHR {
+    /**
+     * 构造函数
+     * @param {*} hooks 
+     * @param {*} execedHooks 
+     */
+    constructor(hooks = {}, execedHooks = {}) {
+      // 单例
+      if (AnyXHR.instance) {
+        return AnyXHR.instance;
+      }
+
+      this.XHR = window.XMLHttpRequest;
+
+      this.hooks = hooks;
+      this.execedHooks = execedHooks;
+      this.init();
+
+      AnyXHR.instance = this;
+    }
+
+    /**
+     * 初始化 重写xhr对象
+     */
+    init() {
+      let _this = this;
+
+      window.XMLHttpRequest = function () {
+        this._xhr = new _this.XHR();
+
+        _this.overwrite(this);
+      };
+
+    }
+
+    /**
+     * 添加勾子
+     * @param {*} key 
+     * @param {*} value 
+     */
+    add(key, value, execed = false) {
+      if (execed) {
+        this.execedHooks[key] = value;
+      } else {
+        this.hooks[key] = value;
+      }
+      return this;
+    }
+
+    /**
+     * 处理重写
+     * @param {*} xhr 
+     */
+    overwrite(proxyXHR) {
+      for (let key in proxyXHR._xhr) {
+
+        if (typeof proxyXHR._xhr[key] === 'function') {
+          this.overwriteMethod(key, proxyXHR);
+          continue;
+        }
+
+        this.overwriteAttributes(key, proxyXHR);
+      }
+    }
+
+    /**
+     * 重写方法
+     * @param {*} key 
+     */
+    overwriteMethod(key, proxyXHR) {
+      let hooks = this.hooks;
+      let execedHooks = this.execedHooks;
+
+      proxyXHR[key] = (...args) => {
+        // 拦截
+        if (hooks[key] && (hooks[key].call(proxyXHR, args) === false)) {
+          return;
+        }
+
+        // 执行方法本体
+        const res = proxyXHR._xhr[key].apply(proxyXHR._xhr, args);
+
+        // 方法本体执行后的钩子
+        execedHooks[key] && execedHooks[key].call(proxyXHR._xhr, res);
+
+        return res;
+      };
+    }
+
+    /**
+     * 重写属性
+     * @param {*} key 
+     */
+    overwriteAttributes(key, proxyXHR) {
+      Object.defineProperty(proxyXHR, key, this.setProperyDescriptor(key, proxyXHR));
+    }
+
+    /**
+     * 设置属性的属性描述
+     * @param {*} key 
+     */
+    setProperyDescriptor(key, proxyXHR) {
+      let obj = Object.create(null);
+      let _this = this;
+
+      obj.set = function (val) {
+
+        // 如果不是on打头的属性
+        if (!key.startsWith('on')) {
+          proxyXHR['__' + key] = val;
+          return;
+        }
+
+        if (_this.hooks[key]) {
+
+          this._xhr[key] = function (...args) {
+            (_this.hooks[key].call(proxyXHR), val.apply(proxyXHR, args));
+          };
+
+          return;
+        }
+
+        this._xhr[key] = val;
+      };
+
+      obj.get = function () {
+        return proxyXHR['__' + key] || this._xhr[key];
+      };
+
+      return obj;
+    }
+
+    /**
+     * 获取实例
+     */
+    getInstance() {
+      return AnyXHR.instance;
+    }
+
+    /**
+     * 删除钩子
+     * @param {*} name 
+     */
+    rmHook(name, isExeced = false) {
+      let target = (isExeced ? this.execedHooks : this.hooks);
+      delete target[name];
+    }
+
+    /**
+     * 清空钩子
+     */
+    clearHook() {
+      this.hooks = {};
+      this.execedHooks = {};
+    }
+
+    /**
+     * 取消监听
+     */
+    unset() {
+      window.XMLHttpRequest = this.XHR;
+    }
+
+    /**
+     * 重新监听
+     */
+    reset() {
+      AnyXHR.instance = null;
+      AnyXHR.instance = new AnyXHR(this.hooks, this.execedHooks);
+    }
+  }
+
+  var AJAXInfo = ({ method, url, response, status }) => {
+    let div = ce('div');
+
+    div.className = '__any_console-network-panel-item';
+
+    div.innerHTML = `
+    <div class="__any_console-network-panel-item-base-info">
+      <span>URL</span>
+      <span>${ url }</span>
+    </div>
+    <div class="__any_console-network-panel-item-base-info">
+      <span>METHOD</span>
+      <span>${ method }</span>
+    </div>
+    <div class="__any_console-network-panel-item-base-info">
+      <span>STATUS</span>
+      <span>${ status }</span>
+    </div>
+    <div class="__any_console-network-panel-item-response">
+    </div>
+  `;
+
+    $('.__any_console-network-panel-item-response', div).innerText = response;
+
+    return div;
+  };
+
   function initListenAJAX (AC) {
     AC.prototype._listenAJAX = function () {
+
+      let hooks = new AnyXHR();
+      let _this = this;
+
+      hooks
+        .add('open', function([type, url]) {
+          this.requestInfo = { type, url };
+        })
+        .add('onload', function() {
+          const data = {
+            ...this.requestInfo,
+            status: this.status,
+            response: this.responseText
+          };
+          
+          let div = AJAXInfo(data);
+
+          append(_this.networkPanel, div);
+        });
+
 
 
     };
@@ -386,6 +607,8 @@
       this.panels = panels;
       
       this.consolePanel = $('.__any_console-console-panel-log-items', this.warpper);
+      this.networkPanel = $('.__any_console-network-panel', this.warpper);
+
       this.toggleBtn = ToggleBtn();
 
       for (let [k, v] of Object.entries(toggleBtnStyle)) {
@@ -400,8 +623,6 @@
       this.logsShowTypesBtn = $$('li', this.logsShowTypesBtnParent);
 
       this.orderInput = $('.__any_console-order input', this.warpper);
-
-      
     };
   }
 
@@ -520,6 +741,24 @@
     };
   }
 
+  var bindNetworkEvents = AC => {
+    AC.prototype._bindNetworkEvents = function() {
+      this.networkPanel.addEventListener('click', (e) => {
+        if (e.target.className !== '__any_console-network-panel-item-response') return;
+
+        if (e.target.style.overflow !== 'visible') {
+          e.target.style.overflow = 'visible';
+          e.target.style.maxHeight = '100%';
+        } else {
+          e.target.style.overflow = 'hidden';
+          e.target.style.maxHeight = '35px';
+        }
+
+        
+      });
+    };
+  };
+
   function show(AC) {
     AC.prototype._show = function() {
       append(document.body, this.warpper, this.toggleBtn);
@@ -576,6 +815,7 @@
   // 绑定事件
   bindCommonEvents(AnyConsole);
   bindConsoleEvents(AnyConsole);
+  bindNetworkEvents(AnyConsole);
 
   // 显示
   show(AnyConsole);
@@ -607,7 +847,7 @@
     }
   }
 
-  var css = "@charset \"UTF-8\";\n.__any_console-init-err {\n  background: #2f78d8;\n  position: fixed;\n  top: 0;\n  left: 0;\n  width: 100%;\n  color: #ffffff;\n  padding: 5px;\n  box-shadow: 0 0 10px #2f78d8; }\n\n.__any_console-toggle-btn {\n  position: fixed;\n  background: #2f78d8;\n  text-align: center;\n  color: #ffffff;\n  border-radius: 50%;\n  font-size: 20px;\n  width: 50px;\n  height: 50px;\n  top: 20px;\n  right: 20px;\n  z-index: 1000;\n  cursor: pointer; }\n  .__any_console-toggle-btn:active {\n    background: #2367c0; }\n  .__any_console-toggle-btn img {\n    margin-top: 8px;\n    width: 30px;\n    height: 30px; }\n\n.__any_console-console-icon, #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-error::before, #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-info::before, #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-warn::before, #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-order-do::before, #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-order-res::before {\n  display: block;\n  height: 15px;\n  width: 15px;\n  line-height: 13px;\n  margin-top: 2px;\n  margin-right: 5px;\n  text-align: center; }\n\n#__any_console-wrapper {\n  position: fixed;\n  bottom: -100%;\n  left: 0;\n  height: 80%;\n  width: 100%;\n  font-size: 10px;\n  background: #ffffff;\n  transition: all .3s; }\n  #__any_console-wrapper * {\n    padding: 0;\n    margin: 0; }\n  #__any_console-wrapper input, #__any_console-wrapper button {\n    outline: 0 none; }\n  #__any_console-wrapper .__any_console-tab .__any_console-header {\n    width: 100%;\n    line-height: 25px;\n    padding: 10px;\n    font-size: 2em;\n    background: #2367c0;\n    color: #ffffff; }\n    #__any_console-wrapper .__any_console-tab .__any_console-header .__any_console-close-btn {\n      float: right;\n      cursor: pointer;\n      margin-right: 20px; }\n      #__any_console-wrapper .__any_console-tab .__any_console-header .__any_console-close-btn img {\n        width: 25px;\n        height: 25px; }\n  #__any_console-wrapper .__any_console-tab .__any_console-tab-wrapper {\n    list-style-type: none;\n    white-space: nowrap;\n    overflow-x: scroll;\n    border-bottom: 1px solid #d1d1d1; }\n    #__any_console-wrapper .__any_console-tab .__any_console-tab-wrapper::-webkit-scrollbar {\n      display: none; }\n    #__any_console-wrapper .__any_console-tab .__any_console-tab-wrapper .__any_console_tab_item.active {\n      background: #2f78d8;\n      color: #ffffff; }\n    #__any_console-wrapper .__any_console-tab .__any_console-tab-wrapper .__any_console_tab_item {\n      display: inline-block;\n      font-size: 1.5em;\n      padding: 5px 10px;\n      cursor: pointer; }\n  #__any_console-wrapper .__any_console-panels {\n    position: relative;\n    height: 100%;\n    width: 100%; }\n    #__any_console-wrapper .__any_console-panels .__any_console-order {\n      position: absolute;\n      bottom: -25px;\n      left: 0;\n      width: 100%;\n      height: 40px;\n      display: flex;\n      z-index: 10; }\n      #__any_console-wrapper .__any_console-panels .__any_console-order input {\n        flex: 1;\n        height: 40px;\n        border: 0 none;\n        border-top: 1px solid #2f78d8;\n        color: #000;\n        font-size: 1.6em;\n        padding: 0 5px;\n        box-sizing: border-box; }\n      #__any_console-wrapper .__any_console-panels .__any_console-order button {\n        width: 60px;\n        height: 40px;\n        background: #2f78d8;\n        color: #ffffff;\n        border: 0 none;\n        border-top: 1px solid #2f78d8; }\n        #__any_console-wrapper .__any_console-panels .__any_console-order button:active {\n          background: #2367c0; }\n    #__any_console-wrapper .__any_console-panels .__any_console_panel {\n      position: absolute;\n      width: 100%;\n      height: calc(100% - 31px - 45px);\n      opacity: 0;\n      display: none;\n      transition: all .3s; }\n    #__any_console-wrapper .__any_console-panels .__any_console-console-panel {\n      position: absolute;\n      width: 100%;\n      height: calc(100% - 31px - 45px - 25px); }\n      #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-filter {\n        height: 25px;\n        border-bottom: 1px solid #d1d1d1;\n        white-space: nowrap; }\n        #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-filter .active {\n          background: #f0f0f0; }\n        #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-filter li {\n          display: inline-block;\n          line-height: 25px;\n          padding: 0 10px;\n          cursor: pointer; }\n      #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items {\n        position: absolute;\n        height: 100%;\n        width: 100%;\n        overflow-y: scroll; }\n        #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items::-webkit-scrollbar {\n          display: none; }\n        #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-console-panel-log-item {\n          display: flex;\n          word-break: break-all;\n          font-size: 1.3em;\n          border-bottom: 1px solid #d1d1d1;\n          padding: 10px 5px;\n          background: #ffffff;\n          overflow-x: scroll; }\n          #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-console-panel-log-item::-webkit-scrollbar {\n            display: none; }\n          #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-console-panel-log-item .__any_console-console-obj-prev {\n            font-weight: 700;\n            cursor: pointer;\n            user-select: none; }\n          #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-console-panel-log-item .__any_console-console-obj-key {\n            color: #92278f;\n            font-weight: 900;\n            word-break: break-all; }\n          #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-console-panel-log-item .__any_console-console-obj-value {\n            color: #3ab54a;\n            font-weight: 900;\n            word-break: break-all; }\n          #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-console-panel-log-item:last-child {\n            margin-bottom: 40px; }\n          #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-console-panel-log-item .__any_console-console-panel-log-item-msg {\n            width: 80%; }\n            #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-console-panel-log-item .__any_console-console-panel-log-item-msg pre {\n              word-break: break-all; }\n          #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-console-panel-log-item .__any_console-console-panel-log-item-time {\n            width: 20%;\n            text-align: right; }\n        #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-error {\n          background: #fff1f1;\n          color: #d33a3a;\n          border-bottom: 1px solid #d33a3a; }\n          #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-error::before {\n            content: '×';\n            color: #d33a3a; }\n        #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-info {\n          background: #e4fbff;\n          color: #2f78d8;\n          border-bottom: 1px solid #2f78d8; }\n          #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-info::before {\n            content: '!';\n            color: #2f78d8;\n            line-height: 15px; }\n        #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-warn {\n          background: #fffde9;\n          color: #c5a90b;\n          border-bottom: 1px solid #c5a90b; }\n          #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-warn::before {\n            content: '?';\n            color: #c5a90b;\n            line-height: 15px; }\n        #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-order-do::before {\n          content: 'i';\n          line-height: 15px;\n          font-weight: 900;\n          color: #2f78d8; }\n        #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-order-res::before {\n          content: 'o';\n          line-height: 15px;\n          font-weight: 900;\n          color: #2f78d8; }\n";
+  var css = "@charset \"UTF-8\";\n.__any_console-init-err {\n  background: #2f78d8;\n  position: fixed;\n  top: 0;\n  left: 0;\n  width: 100%;\n  color: #ffffff;\n  padding: 5px;\n  box-shadow: 0 0 10px #2f78d8; }\n\n.__any_console-toggle-btn {\n  position: fixed;\n  background: #2f78d8;\n  text-align: center;\n  color: #ffffff;\n  border-radius: 50%;\n  font-size: 20px;\n  width: 50px;\n  height: 50px;\n  top: 20px;\n  right: 20px;\n  z-index: 1000;\n  cursor: pointer; }\n  .__any_console-toggle-btn:active {\n    background: #2367c0; }\n  .__any_console-toggle-btn img {\n    margin-top: 8px;\n    width: 30px;\n    height: 30px; }\n\n.__any_console-console-icon, #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-error::before, #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-info::before, #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-warn::before, #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-order-do::before, #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-order-res::before {\n  display: block;\n  height: 15px;\n  width: 15px;\n  line-height: 13px;\n  margin-top: 2px;\n  margin-right: 5px;\n  text-align: center; }\n\n#__any_console-wrapper {\n  position: fixed;\n  bottom: -100%;\n  left: 0;\n  height: 80%;\n  width: 100%;\n  font-size: 10px;\n  background: #ffffff;\n  transition: all .3s; }\n  #__any_console-wrapper * {\n    padding: 0;\n    margin: 0; }\n  #__any_console-wrapper input, #__any_console-wrapper button {\n    outline: 0 none; }\n  #__any_console-wrapper .__any_console-tab .__any_console-header {\n    width: 100%;\n    line-height: 25px;\n    padding: 10px;\n    font-size: 2em;\n    background: #2367c0;\n    color: #ffffff; }\n    #__any_console-wrapper .__any_console-tab .__any_console-header .__any_console-close-btn {\n      float: right;\n      cursor: pointer;\n      margin-right: 20px; }\n      #__any_console-wrapper .__any_console-tab .__any_console-header .__any_console-close-btn img {\n        width: 25px;\n        height: 25px; }\n  #__any_console-wrapper .__any_console-tab .__any_console-tab-wrapper {\n    list-style-type: none;\n    white-space: nowrap;\n    overflow-x: scroll;\n    border-bottom: 1px solid #d1d1d1; }\n    #__any_console-wrapper .__any_console-tab .__any_console-tab-wrapper::-webkit-scrollbar {\n      display: none; }\n    #__any_console-wrapper .__any_console-tab .__any_console-tab-wrapper .__any_console_tab_item.active {\n      background: #2f78d8;\n      color: #ffffff; }\n    #__any_console-wrapper .__any_console-tab .__any_console-tab-wrapper .__any_console_tab_item {\n      display: inline-block;\n      font-size: 1.5em;\n      padding: 5px 10px;\n      cursor: pointer; }\n  #__any_console-wrapper .__any_console-panels {\n    position: relative;\n    height: 100%;\n    width: 100%; }\n    #__any_console-wrapper .__any_console-panels .__any_console-order {\n      position: absolute;\n      bottom: -25px;\n      left: 0;\n      width: 100%;\n      height: 40px;\n      display: flex;\n      z-index: 10; }\n      #__any_console-wrapper .__any_console-panels .__any_console-order input {\n        flex: 1;\n        height: 40px;\n        border: 0 none;\n        border-top: 1px solid #2f78d8;\n        color: #000;\n        font-size: 1.6em;\n        padding: 0 5px;\n        box-sizing: border-box; }\n      #__any_console-wrapper .__any_console-panels .__any_console-order button {\n        width: 60px;\n        height: 40px;\n        background: #2f78d8;\n        color: #ffffff;\n        border: 0 none;\n        border-top: 1px solid #2f78d8; }\n        #__any_console-wrapper .__any_console-panels .__any_console-order button:active {\n          background: #2367c0; }\n    #__any_console-wrapper .__any_console-panels .__any_console_panel {\n      position: absolute;\n      width: 100%;\n      height: calc(100% - 31px - 45px);\n      opacity: 0;\n      display: none;\n      transition: all .3s; }\n    #__any_console-wrapper .__any_console-panels .__any_console-console-panel {\n      position: absolute;\n      width: 100%;\n      height: calc(100% - 31px - 45px - 25px); }\n      #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-filter {\n        height: 25px;\n        border-bottom: 1px solid #d1d1d1;\n        white-space: nowrap; }\n        #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-filter .active {\n          background: #f0f0f0; }\n        #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-filter li {\n          display: inline-block;\n          line-height: 25px;\n          padding: 0 10px;\n          cursor: pointer; }\n      #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items {\n        position: absolute;\n        height: 100%;\n        width: 100%;\n        overflow-y: scroll; }\n        #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items::-webkit-scrollbar {\n          display: none; }\n        #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-console-panel-log-item {\n          display: flex;\n          word-break: break-all;\n          font-size: 1.3em;\n          border-bottom: 1px solid #d1d1d1;\n          padding: 10px 5px;\n          background: #ffffff;\n          overflow-x: scroll; }\n          #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-console-panel-log-item::-webkit-scrollbar {\n            display: none; }\n          #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-console-panel-log-item .__any_console-console-obj-prev {\n            font-weight: 700;\n            cursor: pointer;\n            user-select: none; }\n          #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-console-panel-log-item .__any_console-console-obj-key {\n            color: #92278f;\n            font-weight: 900;\n            word-break: break-all; }\n          #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-console-panel-log-item .__any_console-console-obj-value {\n            color: #3ab54a;\n            font-weight: 900;\n            word-break: break-all; }\n          #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-console-panel-log-item:last-child {\n            margin-bottom: 40px; }\n          #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-console-panel-log-item .__any_console-console-panel-log-item-msg {\n            width: 80%; }\n            #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-console-panel-log-item .__any_console-console-panel-log-item-msg pre {\n              word-break: break-all; }\n          #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-console-panel-log-item .__any_console-console-panel-log-item-time {\n            width: 20%;\n            text-align: right; }\n        #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-error {\n          background: #fff1f1;\n          color: #d33a3a;\n          border-bottom: 1px solid #d33a3a; }\n          #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-error::before {\n            content: '×';\n            color: #d33a3a; }\n        #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-info {\n          background: #e4fbff;\n          color: #2f78d8;\n          border-bottom: 1px solid #2f78d8; }\n          #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-info::before {\n            content: '!';\n            color: #2f78d8;\n            line-height: 15px; }\n        #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-warn {\n          background: #fffde9;\n          color: #c5a90b;\n          border-bottom: 1px solid #c5a90b; }\n          #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-warn::before {\n            content: '?';\n            color: #c5a90b;\n            line-height: 15px; }\n        #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-order-do::before {\n          content: 'i';\n          line-height: 15px;\n          font-weight: 900;\n          color: #2f78d8; }\n        #__any_console-wrapper .__any_console-panels .__any_console-console-panel .__any_console-console-panel-log-items .__any_console-order-res::before {\n          content: 'o';\n          line-height: 15px;\n          font-weight: 900;\n          color: #2f78d8; }\n    #__any_console-wrapper .__any_console-panels .__any_console-network-panel {\n      padding: 10px;\n      box-sizing: border-box;\n      overflow-y: scroll; }\n      #__any_console-wrapper .__any_console-panels .__any_console-network-panel .__any_console-network-panel-item {\n        padding: 10px;\n        border: 1px solid #c1dac2;\n        box-sizing: border-box;\n        font-size: 1.5em;\n        margin-bottom: 10px; }\n        #__any_console-wrapper .__any_console-panels .__any_console-network-panel .__any_console-network-panel-item .__any_console-network-panel-item-base-info {\n          display: flex;\n          margin-bottom: 5px; }\n          #__any_console-wrapper .__any_console-panels .__any_console-network-panel .__any_console-network-panel-item .__any_console-network-panel-item-base-info span:nth-child(1) {\n            width: 80px;\n            color: #17921d;\n            font-weight: 900;\n            display: inline-block; }\n          #__any_console-wrapper .__any_console-panels .__any_console-network-panel .__any_console-network-panel-item .__any_console-network-panel-item-base-info span:nth-child(2) {\n            font-weight: 200;\n            word-break: break-all; }\n        #__any_console-wrapper .__any_console-panels .__any_console-network-panel .__any_console-network-panel-item .__any_console-network-panel-item-response {\n          max-height: 35px;\n          width: 100%;\n          overflow: hidden;\n          word-break: break-all; }\n";
   styleInject(css);
 
   return AnyConsole;

@@ -6,7 +6,5 @@ export default function(AC) {
     this.logsShowTypesBtn = $$('li', this.logsShowTypesBtnParent);
 
     this.orderInput = $('.__any_console-order input', this.warpper);
-
-    
   }
 }

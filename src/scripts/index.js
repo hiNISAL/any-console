@@ -14,6 +14,7 @@ import createConsoleElements from './createElement/console/createElement';
 
 import bindCommonEvents from './bind/common/bind';
 import bindConsoleEvents from './bind/console/bind';
+import bindNetworkEvents from './bind/network/bind';
 
 import show from './show/show';
 
@@ -52,6 +53,7 @@ initListenAJAX(AnyConsole);
 // 绑定事件
 bindCommonEvents(AnyConsole);
 bindConsoleEvents(AnyConsole);
+bindNetworkEvents(AnyConsole);
 
 // 显示
 show(AnyConsole);

@@ -3,6 +3,7 @@ $white: #ffffff;
 $blue: #2f78d8;
 $deep-blue: #2367c0;
 $green: #17921d;
+$thin-green: #c1dac2;
 $thin-red: #fff1f1;
 $red: #d33a3a;
 $thin-blue: #e4fbff;
@@ -310,5 +311,46 @@ $thin-yellow: #fffde9;
       }
     }
 
+    .__any_console-network-panel {
+      padding: 10px;
+      box-sizing: border-box;
+      overflow-y: scroll;
+
+      .__any_console-network-panel-item {
+        padding: 10px;
+        border: 1px solid $thin-green;
+        box-sizing: border-box;
+        font-size: 1.5em;
+        margin-bottom: 10px;
+
+        .__any_console-network-panel-item-base-info {
+          display: flex;
+          margin-bottom: 5px;
+          span {
+            &:nth-child(1) {
+              width: 80px;
+              color: $green;
+              font-weight: 900;
+              display: inline-block;
+            }
+      
+            &:nth-child(2) {
+              font-weight: 200;
+              word-break: break-all;
+            }
+          }
+        }
+
+        .__any_console-network-panel-item-response {
+          max-height: 35px;
+          width: 100%;
+          overflow: hidden;
+          word-break: break-all;
+        }
+      }
+    }
+
   }
 }
+
+

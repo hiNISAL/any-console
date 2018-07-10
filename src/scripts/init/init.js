@@ -1,8 +1,9 @@
 export default function(AC) {
-  AC.prototype._init = function({ defaultPanel = 'console', toggleBtnStyle = {} }) {
+  AC.prototype._init = function({ defaultPanel = 'console', toggleBtnStyle = {}, show = true }) {
     this.warpper = null;  // 整个dom
 
     this.consolePanel = null; // console面板
+    this.networkPanel = null; // network面板
     this.consoleItemsContainer = null; // console面板输出容器
     this.orderInput = null; // 控制台命令的输入框
     this.curPanel = null; // 当前显示的面板
@@ -29,12 +30,13 @@ export default function(AC) {
 
     this._bindCommonEvents();
     this._bindConsoleEvents();
+    this._bindNetworkEvents();
     
     this._show();
   
     this.show = false; // 标记显示状态
     this.curShowConsoleType = 'all';
 
-    this.toggleBtn.click();
+    // this.toggleBtn.click();
   }
 }

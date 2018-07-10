@@ -13,6 +13,8 @@ export default function(AC) {
     this.panels = panels;
     
     this.consolePanel = $('.__any_console-console-panel-log-items', this.warpper);
+    this.networkPanel = $('.__any_console-network-panel', this.warpper);
+
     this.toggleBtn = ToggleBtn();
 
     for (let [k, v] of Object.entries(toggleBtnStyle)) {
