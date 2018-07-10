@@ -13,12 +13,8 @@ export default function (AC) {
         this.requestInfo = { type, url };
       })
       .add('onload', function() {
-        const data = {
-          ...this.requestInfo,
-          status: this.status,
-          response: this.responseText
-        }
-        
+        const data = Object.assign({}, this.requestInfo, {status: this.status, response: this.responseText});
+          console.log(data);
         let div = AJAXInfo(data);
 
         append(_this.networkPanel, div);

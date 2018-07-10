@@ -18,7 +18,7 @@ export default function(msg = '', type = 'log') {
   let item = ce('div');
 
   let date = new Date();
-
+  alert(msg);
   item.className = `__any_console-console-panel-log-item${ TYPES[type] }`;
   item.innerHTML = `
     <div class="__any_console-console-panel-log-item-msg">${ msg }</div>

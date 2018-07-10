@@ -25,6 +25,10 @@ export const ce = (ele) => {
 
 export const formatObject = (obj) => {
   for (let [k, v] of Object.entries(obj)) {
+    if (typeof v === 'string') {
+      obj[k] = filterString(v);
+    }
+
     if (typeof v === 'object') {
       formatObject(obj[k]);
     }
@@ -88,9 +92,18 @@ export const setScrollToBottom = target => {
   target.scrollTop = target.scrollHeight;
 }
 
+export const filterString = str => {
+  return str.replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+}
+
 export const parseLog = logs => {
   let parsedLogs = [];
   for (let i of logs.values()) {
+    if (typeof i === 'string') {
+      i = filterString(i);
+    }
+
     if (typeof i === 'object') {
       i = object2tree(i);
     }

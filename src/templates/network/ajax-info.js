@@ -1,4 +1,4 @@
-import { ce, $ } from "../../utils/utils";
+import { ce } from "../../utils/utils";
 
 export default ({ method, url, response, status }) => {
   let div = ce('div');
@@ -19,10 +19,9 @@ export default ({ method, url, response, status }) => {
       <span>${ status }</span>
     </div>
     <div class="__any_console-network-panel-item-response">
+      ${ response }
     </div>
   `;
-
-  $('.__any_console-network-panel-item-response', div).innerText = response;
 
   return div;
 };

@@ -59,7 +59,7 @@ https://github.com/hiNISAL/any-console.git
 
 ## 计划 TODOS
 
-- [] Network
+- [x] Network
 - [] Cookie
 - [] LocalStorage
 - [] SessionStorage

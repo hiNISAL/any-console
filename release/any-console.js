@@ -32,6 +32,10 @@
 
   const formatObject = (obj) => {
     for (let [k, v] of Object.entries(obj)) {
+      if (typeof v === 'string') {
+        obj[k] = filterString(v);
+      }
+
       if (typeof v === 'object') {
         formatObject(obj[k]);
       }
@@ -95,9 +99,18 @@
     target.scrollTop = target.scrollHeight;
   };
 
+  const filterString = str => {
+    return str.replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;');
+  };
+
   const parseLog = logs => {
     let parsedLogs = [];
     for (let i of logs.values()) {
+      if (typeof i === 'string') {
+        i = filterString(i);
+      }
+
       if (typeof i === 'object') {
         i = object2tree(i);
       }
@@ -171,7 +184,7 @@
     let item = ce('div');
 
     let date = new Date();
-
+    alert(msg);
     item.className = `__any_console-console-panel-log-item${ TYPES[type] }`;
     item.innerHTML = `
     <div class="__any_console-console-panel-log-item-msg">${ msg }</div>
@@ -476,10 +489,9 @@
       <span>${ status }</span>
     </div>
     <div class="__any_console-network-panel-item-response">
+      ${ response }
     </div>
   `;
-
-    $('.__any_console-network-panel-item-response', div).innerText = response;
 
     return div;
   };
@@ -495,12 +507,8 @@
           this.requestInfo = { type, url };
         })
         .add('onload', function() {
-          const data = {
-            ...this.requestInfo,
-            status: this.status,
-            response: this.responseText
-          };
-          
+          const data = Object.assign({}, this.requestInfo, {status: this.status, response: this.responseText});
+            console.log(data);
           let div = AJAXInfo(data);
 
           append(_this.networkPanel, div);
